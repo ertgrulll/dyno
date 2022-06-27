@@ -1,5 +1,7 @@
 ## Dyno
 
+[![pub package](https://img.shields.io/pub/v/dyno.svg)](https://pub.dev/packages/dyno) [![GitHub issues](https://img.shields.io/github/issues/ertgrulll/dyno)](https://github.com/ertgrulll/dyno/issues) [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://gitHub.com/ertgrulll/dyno/graphs/commit-activity)
+
 Creates an isolation pool and manages it dynamically to run a closure isolated.
 
 > **Tip**: running heavy computations isolated prevents lags in application. An isolate has it's own memory and event loop.
@@ -21,7 +23,7 @@ dyno: ^0.0.1
 
 ## Usage
 
-- Import dyno,
+- Import `dyno`,
 
 ```dart
 import 'package:dyno/dyno.dart' as dyno;

@@ -1,3 +1,4 @@
+/// A dynamic isolation pool with load balance for Flutter.
 library dyno;
 
 import 'dart:async';
