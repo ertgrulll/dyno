@@ -70,13 +70,14 @@ FutureOr<R> run<R>(FutureOr<R> Function() func) async {
   // Create a key to pass isolation, isolation sends back this key.
   // Key is used to ensure returned result is for the func.
   final key = Capability();
-
-  isolator.listen((message) {
+  late final StreamSubscription<dynamic> subs;
+  subs = isolator.listen((message) {
     final mes = message as _IsolationResponse;
 
     if (mes.key == key) {
       isolator.load--;
       completer.complete(mes.result as R);
+      subs.cancel();
     }
   });
 
@@ -115,9 +116,8 @@ class _Isolator {
   int load = 0;
 
   /// Adds listener to isolate for responses.
-  void listen(void Function(dynamic message) listener) {
-    _streamController.stream.listen(listener);
-  }
+  StreamSubscription<dynamic> listen(void Function(dynamic message) listener) =>
+      _streamController.stream.listen(listener);
 
   /// Kills isolate and controller.
   void dispose() {
