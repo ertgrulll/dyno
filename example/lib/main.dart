@@ -24,7 +24,7 @@ class _DemoState extends State<Demo> {
     final stopwatch = Stopwatch()..start();
 
     // Calculate the 10000th Fibonacci number isolated.
-    await dyno.run<int>(() {
+    await dyno.run<int>(() async {
       int n1 = 0, n2 = 1;
       late int n3;
 
@@ -44,7 +44,9 @@ class _DemoState extends State<Demo> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: Text('Execution time in ms: $_executionTime')),
+      body: SafeArea(
+        child: Center(child: Text('Execution time in ms: $_executionTime')),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: measureRun,
         child: const Text('Start'),

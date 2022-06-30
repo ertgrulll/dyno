@@ -5,3 +5,7 @@
 ## 0.0.2
 
 - Stream subscription cancel fix
+
+## 0.0.3
+
+- Added isolator reserve support.
