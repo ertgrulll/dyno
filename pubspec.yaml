@@ -1,6 +1,6 @@
 name: dyno
 description: An isolation pool with load balancer for Flutter. Creates and kills isolates as needed.
-version: 0.0.3
+version: 0.0.3+1
 homepage: https://github.com/ertgrulll/dyno
 repository: https://github.com/ertgrulll/dyno
 issue_tracker: https://github.com/ertgrulll/dyno/issues

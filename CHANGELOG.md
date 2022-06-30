@@ -9,3 +9,7 @@
 ## 0.0.3
 
 - Added isolator reserve support.
+
+## 0.0.3+1
+
+- Readme example fix
