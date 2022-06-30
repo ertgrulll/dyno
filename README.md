@@ -61,7 +61,7 @@ dyno.prepare(single: false);
     ```
 
     ```dart
-    final result = await dyno.run<MyObject>(myFunc, 'myParam');
+    final result = await dyno.run<MyObject>(myFunc, param1: 'myParam');
     ```
     or
     ```dart
