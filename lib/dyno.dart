@@ -2,10 +2,27 @@
 library dyno;
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
+import 'dart:math' as math;
 
 /// Keeps bidirectional isolators.
 final _isolators = <_Isolator>[];
+int _limit = math.min(math.max(Platform.numberOfProcessors, 2), 4);
+int _loadedIsolatorCount = 0;
+int _pendingIsolatorCreations = 0;
+
+/// Returns isolator count with 0 load.
+int get freeIsolatorCount => _isolators.length - _loadedIsolatorCount;
+
+/// Limits max isolator count.
+///
+/// The default limit is 4 if the number of host device processors is more
+/// than 4, otherwise the number of processors.
+///
+/// Useful to avoid creating a large number of isolations if you are
+/// calling [run] repeteadly.
+void limit(int count) => _limit = count;
 
 /// Prepares max two isolate before using [run].
 ///
@@ -35,6 +52,12 @@ Future<void> prepare({bool single = false}) async {
 /// Reserving an isolation prevents re-initialize every time.
 Future<void> reserve({required String key}) async {
   final unreservedIsolators = _isolators.where((i) => i.identifier == null);
+
+  if (unreservedIsolators.isEmpty && _isolators.length == _limit) {
+    throw "All isolators reserved and reached to isolator limit, "
+        "couldn't create isolator.";
+  }
+
   final isolator = unreservedIsolators.length == 1
       ? await _createIsolator()
       : unreservedIsolators.first;
@@ -55,31 +78,26 @@ Future<_Isolator> _getFree() async {
   await prepare(single: true);
 
   _isolators.sort((a, b) => a.load - b.load);
+  final limit = _limit - _pendingIsolatorCreations;
+  if (_isolators[0].load != 0 && _isolators.length < limit) {
+    await _createIsolator();
+  }
 
-  // Find the first isolator index where the load is not 0.
-  int loadPos = _isolators.indexWhere((element) => element.load > 0);
-  loadPos = loadPos == -1 ? _isolators.length : loadPos;
+  return _isolators.first;
+}
 
-  // Dispose and remove unnecessary isolators, keep 2 free isolators live.
-  if (loadPos > 2) {
-    for (int i = loadPos - 1; i > 1; i--) {
-      final isolator = _isolators[i];
-      // Prevent reserved isolator from disposed.
-      if (isolator.identifier != null) continue;
+/// Disposes and remove unnecessary isolators, keeps 2 isolators alive.
+void _clean() {
+  for (int i = _isolators.length - 1; i >= 0; i--) {
+    if (freeIsolatorCount <= 2) return;
 
+    final isolator = _isolators[i];
+    // Prevent reserved isolator from disposed.
+    if (isolator.load == 0 && isolator.identifier == null) {
       isolator.dispose();
       _isolators.removeAt(i);
     }
   }
-
-  if (_isolators[0].load != 0) {
-    final isolator = _Isolator();
-    await isolator.init();
-
-    _isolators.insert(0, isolator);
-  }
-
-  return _isolators.first;
 }
 
 /// Runs a function isolated and returns result.
@@ -116,6 +134,7 @@ FutureOr<R> run<R>(
       isolator.load--;
       completer.complete(mes.result as R);
       subs.cancel();
+      _clean();
     }
   });
 
@@ -140,9 +159,11 @@ void dispose() {
 
 /// Creates an isolator and adds it to the isolators.
 Future<_Isolator> _createIsolator() async {
+  _pendingIsolatorCreations++;
   final instance = _Isolator();
   await instance.init();
-  _isolators.add(instance);
+  _isolators.insert(0, instance);
+  _pendingIsolatorCreations--;
 
   return instance;
 }
@@ -167,7 +188,21 @@ class _Isolator {
   late SendPort port;
 
   /// Number of pending processes.
-  int load = 0;
+  int _load = 0;
+
+  /// Returns number of pending process count.
+  int get load => _load;
+
+  /// Sets load of the isolator instance.
+  set load(int val) {
+    if (_load == 0) {
+      _loadedIsolatorCount++;
+    } else if (val == 0) {
+      _loadedIsolatorCount--;
+    }
+
+    _load = val;
+  }
 
   /// Adds listener to isolate for responses.
   StreamSubscription<dynamic> listen(void Function(dynamic message) listener) =>

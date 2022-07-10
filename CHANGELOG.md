@@ -13,3 +13,8 @@
 ## 0.0.3+1
 
 - Readme example fix
+
+## 0.0.4
+
+- Added max isolation count limit
+- Improved isolator clean process

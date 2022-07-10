@@ -14,13 +14,13 @@ Creates an isolation pool and manages it dynamically to run a closure isolated.
 
 ➡️ Allows the use of certain isolate for certain processes. 
 
-➡️ Lightweight, only ~270 lines.
+➡️ Lightweight, only 171 lines of code.
 
 ## Getting started
  Add dependency to `pubspec.yaml`:
 
  ```yaml
-dyno: ^0.0.3
+dyno: ^0.0.4
  ```
 
 ## Usage
@@ -39,7 +39,7 @@ import 'package:dyno/dyno.dart' as dyno;
 dyno.prepare(single: false);
 ```
 
-> `prepare` creates _two_ isolate by default, but creates _one_ isolate when `single` parameter is set to true.
+> `prepare` creates _two_ isolate by default, but creates _one_ when `single` parameter is set to true.
 
 - Running isolated,
 
@@ -71,8 +71,9 @@ dyno.prepare(single: false);
       return myResults;
     }, param1: 'myParam');
     ```
+___
 
-### Isolator Reserve
+### **Isolator Reserve**
  Isolator reserving useful for processes that require initialization. Isolates don't share memory, once you initialize a class or a package in the main isolate, you can't use it in another isolate without initializing it for isolation. ***Dyno*** excludes reserved isolators from automatic clean and keeps them alive until `unreserve` called.
 
  > An example use case may be cache supported api requests. Reserve an isolate, initialize your local database package(tested with _Hive_) and send all requests, encode/decode jsons, save it to the local database in reserved isoalator and return result.
@@ -81,7 +82,7 @@ dyno.prepare(single: false);
 
 ```dart
 await dyno.reserve('my_api_isolator');
-dyno.run(() async => await initializeMyLocalDb(), key: 'my_api_isolator');
+dyno.run(initializeMyLocalDb, key: 'my_api_isolator');
 ```
 And use reserved isolator later by sending key to the `run` method,
 
@@ -96,6 +97,17 @@ dyno.run<Profile>((String userId) async {
 When you want to let dyno to clean reserved isolator, call `dyno.unreserve('my_api_isolator')`. 
  ___
 
+### **Isolator Limit**
+When the `run` method is called, _Dyno_ creates a new isolator if all the created isolators are in use. If `run` is called repeatedly, the isolation count can increase very quickly, which can block the UI builds.
+
+The default limit is three if the number of host device processors is less than three, otherwise the number of processors. When isolator count reaches to the limit, _Dyno_ runs on the least loaded isolator.
+Limit can be changed by calling `limit` method.
+
+```dart
+  dyno.limit(2);
+```
+
+___
 
 ## Maintainer
 Hey, I'm Ertuğrul, please feel free to ask any questions about this tool. If you find `Dyno` useful, you can hit the like button and give a star to project on [Github](https://github.com/ertgrulll/dyno) to motivate me or treat me with [coffee](https://www.buymeacoffee.com/ertgrulll).

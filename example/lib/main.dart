@@ -23,12 +23,12 @@ class _DemoState extends State<Demo> {
   Future<void> measureRun() async {
     final stopwatch = Stopwatch()..start();
 
-    // Calculate the 10000th Fibonacci number isolated.
+    // Calculate the 100,000th Fibonacci number isolated.
     await dyno.run<int>(() async {
       int n1 = 0, n2 = 1;
       late int n3;
 
-      for (int i = 2; i <= 10000; i++) {
+      for (int i = 2; i <= 10000000; i++) {
         n3 = n1 + n2;
         n1 = n2;
         n2 = n3;
@@ -39,6 +39,11 @@ class _DemoState extends State<Demo> {
 
     setState(() => _executionTime = stopwatch.elapsed.inMilliseconds);
     stopwatch.reset();
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
